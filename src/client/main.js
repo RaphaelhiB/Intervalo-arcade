@@ -104,7 +104,7 @@ async function onServerMessage(event) {
     gameId = message.gameId;
     try {
       await ensureGame(gameId);
-      canvas = showGame(root, gameId, mode);
+      canvas = showGame(root, gameId, mode, roomInfo?.playerIndex || 0);
       onlinePlaying = true;
       const sendFrame = () => {
         if (!onlinePlaying || socket?.readyState !== WebSocket.OPEN) return;
