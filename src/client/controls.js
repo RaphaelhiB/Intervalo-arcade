@@ -1,4 +1,4 @@
-import { makeFrame } from '../shared/input.js';
+import { makeFrame, mergeFrames } from '../shared/input.js';
 
 const MAPS = [
   { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD', action: 'Space' },
@@ -38,5 +38,15 @@ export function createKeyboard(target = window) {
       return frames;
     },
     reset() { keys.clear(); previous.clear(); pressed.clear(); }
+  };
+}
+
+export function createInputSource(keyboard, touch) {
+  return {
+    frames(count) {
+      const frames = keyboard.frames(count);
+      return count === 1 ? [mergeFrames(frames[0], touch.frame())] : frames;
+    },
+    reset() { keyboard.reset(); touch.reset(); }
   };
 }

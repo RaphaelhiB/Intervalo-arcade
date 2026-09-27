@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { makeFrame, mergeFrames } from '../src/shared/input.js';
-import { frameForKeys, createKeyboard } from '../src/client/controls.js';
+import { frameForKeys, createKeyboard, createInputSource } from '../src/client/controls.js';
+import { createTouchState } from '../src/client/touch-controls.js';
 
 test('segurar ação só produz actionPressed no primeiro quadro', () => {
   const first = makeFrame({ action: true }, {});
@@ -52,4 +53,29 @@ test('teclado e toque combinam direções e ação sem perda', () => {
     up: true, down: false, left: false, right: true,
     action: true, actionPressed: true
   });
+});
+
+test('entrada unificada consome toque rápido uma vez e limpa ao sair', () => {
+  const keyboard = createKeyboard(new EventTarget());
+  const touch = createTouchState();
+  const input = createInputSource(keyboard, touch);
+  touch.press(1, 'action');
+  touch.release(1);
+  assert.equal(input.frames(1)[0].actionPressed, true);
+  assert.equal(input.frames(1)[0].actionPressed, false);
+  touch.press(2, 'left');
+  input.reset();
+  assert.equal(input.frames(1)[0].left, false);
+});
+
+test('dupla local mantém entradas de teclado separadas', () => {
+  const target = new EventTarget();
+  const keyboard = createKeyboard(target);
+  const touch = createTouchState();
+  const input = createInputSource(keyboard, touch);
+  touch.press(1, 'action');
+  const frames = input.frames(2);
+  assert.equal(frames.length, 2);
+  assert.equal(frames[0].actionPressed, false);
+  assert.equal(frames[1].actionPressed, false);
 });

@@ -17,13 +17,25 @@ test('segurar ação não repete actionPressed', () => {
   assert.equal(touch.frame().action, true);
 });
 
+test('toque rápido de direção chega ao quadro e expira sem repetir seleção', () => {
+  let time = 0;
+  const touch = createTouchState(() => time);
+  touch.press(1, 'right');
+  touch.release(1);
+  assert.equal(touch.frame().right, true);
+  time = 100;
+  assert.equal(touch.frame().right, false);
+});
+
 test('dois dedos mantêm direção e ação independentes', () => {
-  const touch = createTouchState();
+  let time = 0;
+  const touch = createTouchState(() => time);
   touch.press(1, 'left');
   touch.press(2, 'action');
   assert.equal(touch.frame().left, true);
   assert.equal(touch.frame().action, true);
   touch.release(1);
+  time = 100;
   assert.equal(touch.frame().left, false);
   assert.equal(touch.frame().action, true);
 });
@@ -48,4 +60,11 @@ test('cancelamento e perda de foco soltam comandos retidos', () => {
   pointer('pointerdown', 2);
   target.dispatchEvent(new Event('blur'));
   assert.equal(touch.frame().action, false);
+});
+
+test('toque cancelado antes do quadro não dispara ação', () => {
+  const touch = createTouchState();
+  touch.press(1, 'action');
+  touch.release(1, true);
+  assert.equal(touch.frame().actionPressed, false);
 });

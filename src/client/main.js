@@ -1,9 +1,13 @@
 import { CATALOG, showMenu, showModes, showLobby, showGame, showResult } from './screens.js';
-import { createKeyboard } from './controls.js';
+import { createKeyboard, createInputSource } from './controls.js';
+import { createTouchState, bindTouchControls } from './touch-controls.js';
 import { createGame, stepGame, resultOf, registerGame } from '../shared/game.js';
 
 const root = document.querySelector('#app');
 const keyboard = createKeyboard(window);
+const touch = createTouchState();
+bindTouchControls(root, touch, window);
+const input = createInputSource(keyboard, touch);
 const loaded = new Map();
 let gameId = null;
 let mode = 'solo';
@@ -61,7 +65,7 @@ function records() {
 function stop() {
   cancelAnimationFrame(animation);
   animation = 0;
-  keyboard.reset();
+  input.reset();
 }
 
 function closeOnline() {
@@ -109,7 +113,7 @@ async function onServerMessage(event) {
       onlinePlaying = true;
       const sendFrame = () => {
         if (!onlinePlaying || socket?.readyState !== WebSocket.OPEN) return;
-        const frame = keyboard.frames(1)[0];
+        const frame = input.frames(1)[0];
         if (gameId === 'puzzles') frame.round = state?.round;
         socket.send(JSON.stringify({ type: 'input', frame }));
         animation = requestAnimationFrame(sendFrame);
@@ -161,7 +165,7 @@ async function startLocal(selectedMode) {
     const loop = now => {
       const dt = Math.min(0.05, (now - lastTime) / 1000);
       lastTime = now;
-      const frames = keyboard.frames(mode === 'solo' ? 1 : 2);
+      const frames = input.frames(mode === 'solo' ? 1 : 2);
       state = stepGame(gameId, state, frames, dt);
       model.render(canvas.getContext('2d'), state, { width: canvas.width, height: canvas.height });
       const result = resultOf(gameId, state);

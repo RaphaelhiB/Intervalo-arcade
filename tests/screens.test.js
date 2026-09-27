@@ -30,6 +30,13 @@ test('partida preserva o Canvas lógico e avisa para girar o celular', () => {
   assert.match(root.innerHTML, /VOCÊ É P2/);
 });
 
+test('dupla no mesmo computador usa somente o teclado', () => {
+  const root = screen();
+  showGame(root, 'arena', 'local');
+  assert.doesNotMatch(root.innerHTML, /data-control=/);
+  assert.match(root.innerHTML, /DUPLA LOCAL/);
+});
+
 test('menu e escolha de modo explicam celular e orientação', () => {
   const root = screen();
   showMenu(root);
