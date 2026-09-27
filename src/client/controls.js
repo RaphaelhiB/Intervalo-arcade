@@ -16,21 +16,27 @@ export function frameForKeys(keys, previousKeys, playerIndex = 0) {
 
 export function createKeyboard(target = window) {
   const keys = new Set();
+  const pressed = new Set();
   let previous = new Set();
   const prevent = new Set(['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
   target.addEventListener('keydown', event => {
-    if (event.target instanceof HTMLElement && ['INPUT', 'TEXTAREA'].includes(event.target.tagName)) return;
+    if (typeof HTMLElement !== 'undefined' && event.target instanceof HTMLElement && ['INPUT', 'TEXTAREA'].includes(event.target.tagName)) return;
     if (prevent.has(event.code)) event.preventDefault();
+    if (!keys.has(event.code)) pressed.add(event.code);
     keys.add(event.code);
   });
   target.addEventListener('keyup', event => keys.delete(event.code));
   target.addEventListener('blur', () => keys.clear());
   return {
     frames(count) {
-      const frames = Array.from({ length: count }, (_, index) => frameForKeys(keys, previous, index));
+      const frames = Array.from({ length: count }, (_, index) => ({
+        ...frameForKeys(keys, previous, index),
+        actionPressed: pressed.has(MAPS[index].action) || (keys.has(MAPS[index].action) && !previous.has(MAPS[index].action))
+      }));
       previous = new Set(keys);
+      pressed.clear();
       return frames;
     },
-    reset() { keys.clear(); previous.clear(); }
+    reset() { keys.clear(); previous.clear(); pressed.clear(); }
   };
 }

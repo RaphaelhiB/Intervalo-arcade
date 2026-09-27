@@ -11,6 +11,9 @@ let state = null;
 let canvas = null;
 let animation = 0;
 let lastTime = 0;
+let socket = null;
+let roomInfo = null;
+let onlinePlaying = false;
 
 const loaders = {
   arena: async () => {
@@ -61,10 +64,87 @@ function stop() {
   keyboard.reset();
 }
 
+function closeOnline() {
+  const previous = socket;
+  socket = null;
+  roomInfo = null;
+  onlinePlaying = false;
+  if (previous && previous.readyState < WebSocket.CLOSING) previous.close();
+}
+
 function home() {
   stop();
+  closeOnline();
   state = null;
   showMenu(root, records());
+}
+
+function lobbyMessage(message) {
+  const element = root.querySelector('.lobby-message');
+  if (element) element.textContent = message;
+}
+
+async function onServerMessage(event) {
+  let message;
+  try { message = JSON.parse(event.data); } catch { return; }
+  if (message.type === 'room') {
+    roomInfo = message;
+    gameId = message.gameId || gameId;
+    if (!onlinePlaying && root.querySelector('.lobby-page')) showLobby(root, gameId, roomInfo);
+  } else if (message.type === 'error') {
+    lobbyMessage(message.message);
+  } else if (message.type === 'closed') {
+    onlinePlaying = false;
+    roomInfo = null;
+    stop();
+    showLobby(root, gameId, { message: message.reason });
+  } else if (message.type === 'start') {
+    stop();
+    mode = 'online';
+    gameId = message.gameId;
+    try {
+      await ensureGame(gameId);
+      canvas = showGame(root, gameId, mode);
+      onlinePlaying = true;
+      const sendFrame = () => {
+        if (!onlinePlaying || socket?.readyState !== WebSocket.OPEN) return;
+        socket.send(JSON.stringify({ type: 'input', frame: keyboard.frames(1)[0] }));
+        animation = requestAnimationFrame(sendFrame);
+      };
+      animation = requestAnimationFrame(sendFrame);
+    } catch (error) {
+      showLobby(root, gameId, { ...roomInfo, message: `Falha ao abrir o jogo: ${error.message}` });
+    }
+  } else if (message.type === 'state') {
+    if (!onlinePlaying || !canvas) return;
+    state = message.state;
+    loaded.get(gameId)?.render(canvas.getContext('2d'), state, { width: canvas.width, height: canvas.height });
+  } else if (message.type === 'result') {
+    if (!onlinePlaying) return;
+    onlinePlaying = false;
+    finish(message.result);
+  }
+}
+
+async function openSocket() {
+  if (socket?.readyState === WebSocket.OPEN) return socket;
+  const url = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/ws`;
+  const connection = new WebSocket(url);
+  socket = connection;
+  connection.addEventListener('message', onServerMessage);
+  connection.addEventListener('close', () => {
+    if (socket !== connection) return;
+    socket = null;
+    roomInfo = null;
+    onlinePlaying = false;
+    stop();
+    if (mode === 'online') showLobby(root, gameId, { message: 'Conexão perdida. Crie ou entre em outra sala.' });
+  });
+  await new Promise((resolve, reject) => {
+    connection.addEventListener('open', resolve, { once: true });
+    connection.addEventListener('error', () => reject(new Error('Servidor indisponível.')), { once: true });
+  });
+  return connection;
 }
 
 async function startLocal(selectedMode) {
@@ -117,11 +197,23 @@ root.addEventListener('click', async event => {
     await startLocal(button.dataset.mode);
   } else if (button.dataset.mode === 'online') {
     mode = 'online';
-    showLobby(root, gameId, { message: 'Conectando ao servidor…' });
+    showLobby(root, gameId);
+  } else if (button.hasAttribute('data-create-room')) {
+    lobbyMessage('Criando sala…');
+    try { (await openSocket()).send(JSON.stringify({ type: 'create', gameId })); }
+    catch (error) { lobbyMessage(error.message); }
+  } else if (button.hasAttribute('data-join-room')) {
+    const code = root.querySelector('#join-code')?.value.trim().toUpperCase() || '';
+    if (!/^[A-Z0-9]{6}$/.test(code)) { lobbyMessage('Digite um código de 6 caracteres.'); return; }
+    lobbyMessage('Entrando na sala…');
+    try { (await openSocket()).send(JSON.stringify({ type: 'join', code })); }
+    catch (error) { lobbyMessage(error.message); }
+  } else if (button.hasAttribute('data-start-room')) {
+    socket?.send(JSON.stringify({ type: 'start' }));
   } else if (button.hasAttribute('data-exit') || button.hasAttribute('data-home')) {
     home();
   } else if (button.hasAttribute('data-replay')) {
-    if (mode === 'online') showLobby(root, gameId);
+    if (mode === 'online') showLobby(root, gameId, roomInfo || {});
     else await startLocal(mode);
   }
 });

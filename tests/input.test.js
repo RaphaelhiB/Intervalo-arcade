@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { makeFrame } from '../src/shared/input.js';
-import { frameForKeys } from '../src/client/controls.js';
+import { frameForKeys, createKeyboard } from '../src/client/controls.js';
 
 test('segurar ação só produz actionPressed no primeiro quadro', () => {
   const first = makeFrame({ action: true }, {});
@@ -29,4 +29,18 @@ test('controles locais separam as teclas dos dois jogadores', () => {
     up: false, down: false, left: true, right: false,
     action: true, actionPressed: true
   });
+});
+
+test('toque rápido entre quadros ainda produz uma ação', () => {
+  const target = new EventTarget();
+  const keyboard = createKeyboard(target);
+  const press = type => {
+    const event = new Event(type);
+    Object.defineProperty(event, 'code', { value: 'Space' });
+    target.dispatchEvent(event);
+  };
+  press('keydown');
+  press('keyup');
+  assert.equal(keyboard.frames(1)[0].actionPressed, true);
+  assert.equal(keyboard.frames(1)[0].actionPressed, false);
 });

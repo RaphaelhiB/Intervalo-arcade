@@ -2,6 +2,8 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { dirname, extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { WebSocketServer } from 'ws';
+import { RoomManager } from './rooms.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml' };
@@ -31,7 +33,33 @@ async function serve(request, response) {
 }
 
 export function createHttpServer() {
-  return createServer(serve);
+  const server = createServer(serve);
+  const rooms = new RoomManager();
+  const sockets = new WebSocketServer({ noServer: true, maxPayload: 4096 });
+  let timer;
+  server.on('upgrade', (request, socket, head) => {
+    if (request.url !== '/ws') { socket.destroy(); return; }
+    sockets.handleUpgrade(request, socket, head, client => sockets.emit('connection', client));
+  });
+  sockets.on('connection', client => {
+    client.on('message', data => {
+      let message;
+      try { message = JSON.parse(data.toString()); }
+      catch { rooms.send(client, { type: 'error', message: 'Mensagem inválida.' }); return; }
+      if (!message || typeof message !== 'object') { rooms.send(client, { type: 'error', message: 'Mensagem inválida.' }); return; }
+      switch (message.type) {
+        case 'create': rooms.create(client, message.gameId); break;
+        case 'join': rooms.join(client, message.code); break;
+        case 'start': rooms.start(client); break;
+        case 'input': rooms.input(client, message.frame); break;
+        default: rooms.send(client, { type: 'error', message: 'Ação desconhecida.' });
+      }
+    });
+    client.on('close', () => rooms.leave(client));
+  });
+  server.on('listening', () => { timer = setInterval(() => rooms.tickAll(1 / 30), 1000 / 30); });
+  server.on('close', () => { clearInterval(timer); sockets.close(); });
+  return server;
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
