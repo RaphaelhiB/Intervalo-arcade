@@ -1,6 +1,7 @@
 import { CATALOG, showMenu, showModes, showLobby, showGame, showResult } from './screens.js';
 import { createKeyboard, createInputSource } from './controls.js';
 import { createTouchState, bindTouchControls } from './touch-controls.js';
+import { frameDelta } from './orientation.js';
 import { createGame, stepGame, resultOf, registerGame } from '../shared/game.js';
 
 const root = document.querySelector('#app');
@@ -163,8 +164,15 @@ async function startLocal(selectedMode) {
     canvas = showGame(root, gameId, mode);
     lastTime = performance.now();
     const loop = now => {
-      const dt = Math.min(0.05, (now - lastTime) / 1000);
+      const paused = mode === 'solo' && window.matchMedia('(pointer: coarse) and (orientation: portrait)').matches;
+      const dt = frameDelta(lastTime, now, paused);
       lastTime = now;
+      if (paused) {
+        input.reset();
+        model.render(canvas.getContext('2d'), state, { width: canvas.width, height: canvas.height });
+        animation = requestAnimationFrame(loop);
+        return;
+      }
       const frames = input.frames(mode === 'solo' ? 1 : 2);
       state = stepGame(gameId, state, frames, dt);
       model.render(canvas.getContext('2d'), state, { width: canvas.width, height: canvas.height });

@@ -37,6 +37,12 @@ test('dupla no mesmo computador usa somente o teclado', () => {
   assert.match(root.innerHTML, /DUPLA LOCAL/);
 });
 
+test('partida online identifica o modo para manter controles acessíveis na vertical', () => {
+  const root = screen();
+  showGame(root, 'race', 'online', 1);
+  assert.match(root.innerHTML, /class="play-shell online-mode"/);
+});
+
 test('menu e escolha de modo explicam celular e orientação', () => {
   const root = screen();
   showMenu(root);

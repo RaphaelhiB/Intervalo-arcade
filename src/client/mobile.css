@@ -30,7 +30,7 @@
   .mode-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 
-@media(pointer:coarse),(max-width:900px) and (orientation:landscape){
+@media(pointer:coarse){
   .play-shell{height:100dvh;overflow:hidden;padding:0 max(7px,env(safe-area-inset-right)) 0 max(7px,env(safe-area-inset-left))}
   .play-top{height:42px;min-height:42px}
   .play-top .back{font-size:10px}
@@ -63,6 +63,9 @@
 @media(pointer:coarse) and (orientation:portrait){
   .touch-controls{display:none}
   .rotate-prompt{display:grid;place-items:center;text-align:center;position:absolute;inset:0;z-index:2;padding:25px;background:#0c162bea;color:#bdff6e;font:700 19px 'Space Grotesk',sans-serif}
+  .online-mode .game-stage{flex-direction:column}
+  .online-mode .touch-controls{display:flex;position:relative;inset:auto;width:100%;flex:0 0 150px;padding:4px 5px;align-items:flex-end}
+  .online-mode .rotate-prompt{display:block;inset:0 0 auto;min-height:32px;padding:7px;background:#0c162bd9;font-size:12px;pointer-events:none}
 }
 
 @media(max-width:650px) and (pointer:coarse){
