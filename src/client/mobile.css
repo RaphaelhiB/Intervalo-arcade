@@ -1,0 +1,70 @@
+.game-stage{width:100%;min-height:0;flex:1;display:flex;align-items:center;justify-content:center;position:relative}
+.touch-controls,.touch-hint,.rotate-prompt,.mobile-orientation-hint{display:none}
+
+@media(max-width:650px){
+  .topbar{height:66px;flex-shrink:0}
+  .brand{font-size:13px}
+  .home{padding:35px 0;gap:12px}
+  .hero h1{font-size:clamp(39px,11vw,54px)}
+  .hero p{font-size:15px}
+  .hero-chips{margin-top:23px}
+  .game-card{min-height:180px}
+  .mode-page,.lobby-page,.result-page{padding:35px 0 55px}
+  .mode-title h1{font-size:35px}
+  .mode-grid{gap:10px}
+  .mode-card{min-height:154px;padding:18px}
+  .mode-glyph{font-size:29px;margin-bottom:5px}
+  .mode-card strong{font-size:19px}
+  .mode-card>span:not(.mode-glyph){font-size:13px}
+  .lobby-panel{padding:20px}
+  .lobby-page h1{font-size:43px}
+  .join-row{flex-wrap:wrap}
+  .join-row input,.join-row button{width:100%}
+  .result-page h1{font-size:40px}
+  .result-score{font-size:64px}
+}
+
+@media(pointer:coarse){
+  .desktop-local,.control-hint{display:none}
+  .mobile-orientation-hint{display:block;color:#bdff6e;font-size:13px;line-height:1.5;margin:16px 0}
+  .mode-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+@media(pointer:coarse),(max-width:900px) and (orientation:landscape){
+  .play-shell{height:100dvh;overflow:hidden;padding:0 max(7px,env(safe-area-inset-right)) 0 max(7px,env(safe-area-inset-left))}
+  .play-top{height:42px;min-height:42px}
+  .play-top .back{font-size:10px}
+  .play-game-title{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mini-icon{font-size:17px;margin-right:4px}
+  .play-mode{font-size:9px;text-align:right;letter-spacing:.05em}
+  .play-main{width:100%;overflow:hidden}
+  .game-stage{width:100%;min-height:0;flex:1}
+  .canvas-wrap{width:auto;height:min(calc(100dvh - 78px),62.5vw);max-height:none;aspect-ratio:8/5;flex:none;border-radius:9px}
+  canvas{touch-action:none}
+  .play-bottom{width:100%;min-height:36px;align-items:center;padding:3px 7px}
+  .keyboard-hint{display:none}
+  .touch-hint{display:block;font-size:10px;line-height:1.25;letter-spacing:0}
+  .status-dot{font-size:9px;white-space:nowrap}
+  .touch-controls{display:flex;position:absolute;inset:0;justify-content:space-between;align-items:flex-end;padding:0 5px 4px;pointer-events:none}
+  .touch-left{min-width:0}
+  .touch-controls button{pointer-events:auto;touch-action:none;user-select:none;-webkit-user-select:none;border:1px solid #c9e5ff99;border-radius:12px;background:#13233ad9;color:#f6fbff;font-weight:700;box-shadow:0 4px 15px #0008}
+  .touch-controls button:active{background:#bdff6e;color:#0c1724}
+  .touch-pad{display:grid;grid-template-columns:repeat(3,47px);grid-template-rows:repeat(3,47px);gap:2px}
+  .touch-pad button{width:47px;height:47px;font-size:20px}
+  .touch-pad button[data-control=up]{grid-column:2;grid-row:1}
+  .touch-pad button[data-control=left]{grid-column:1;grid-row:2}
+  .touch-pad button[data-control=right]{grid-column:3;grid-row:2}
+  .touch-pad button[data-control=down]{grid-column:2;grid-row:3}
+  .touch-nav{display:flex;gap:5px}
+  .touch-nav button{width:62px;height:58px;font-size:24px}
+  .touch-action{min-width:108px;height:72px;margin-bottom:9px;padding:0 9px;font-size:11px;letter-spacing:.04em}
+}
+
+@media(pointer:coarse) and (orientation:portrait){
+  .touch-controls{display:none}
+  .rotate-prompt{display:grid;place-items:center;text-align:center;position:absolute;inset:0;z-index:2;padding:25px;background:#0c162bea;color:#bdff6e;font:700 19px 'Space Grotesk',sans-serif}
+}
+
+@media(max-width:650px) and (pointer:coarse){
+  .mode-grid{grid-template-columns:1fr}
+}
