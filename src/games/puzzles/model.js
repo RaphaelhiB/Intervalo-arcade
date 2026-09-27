@@ -2,16 +2,16 @@ import { buildQuestions } from './questions.js';
 
 export function createPuzzles(seed, playerCount) {
   return {
-    questions: buildQuestions(seed, 10), playerCount, round: 0,
+    questions: buildQuestions(seed, 12), playerCount, round: 0,
     selections: Array(playerCount).fill(0), blocked: Array(playerCount).fill(false),
     navCooldown: Array(playerCount).fill(0), points: Array(playerCount).fill(0),
-    questionTime: 15, totalRemaining: 180, status: 'playing'
+    questionTime: 18, totalRemaining: 240, status: 'playing'
   };
 }
 
 function nextQuestion(state) {
   state.round++;
-  state.questionTime = 15;
+  state.questionTime = 18;
   state.selections.fill(0);
   state.blocked.fill(false);
   state.navCooldown.fill(0);

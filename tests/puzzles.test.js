@@ -2,6 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createPuzzles, stepPuzzles, resultPuzzles } from '../src/games/puzzles/model.js';
 
+test('enigmas oferecem pelo menos três minutos para todas as rodadas', () => {
+  const state = createPuzzles(1, 1);
+  assert.ok(state.questions.length * state.questionTime >= 180);
+  assert.ok(state.totalRemaining >= 180);
+});
+
 const idle = { left: false, right: false, actionPressed: false };
 
 test('resposta correta no solo marca ponto e avança rodada', () => {

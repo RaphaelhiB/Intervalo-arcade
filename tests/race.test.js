@@ -45,3 +45,11 @@ test('primeiro de quatro corredores a chegar vence', () => {
   assert.equal(resultRace(state).winner, 2);
   assert.ok(resultRace(state).score > 0);
 });
+
+test('corrida solo dura aproximadamente três a cinco minutos sem saltos', () => {
+  const state = createRace(1, 1);
+  for (let i = 0; i < 11000 && state.status === 'playing'; i++) stepRace(state, [idle], 0.05);
+  assert.equal(state.status, 'finished');
+  assert.ok(state.runners[0].finishedAt >= 180);
+  assert.ok(state.runners[0].finishedAt <= 300);
+});

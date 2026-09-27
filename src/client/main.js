@@ -102,13 +102,16 @@ async function onServerMessage(event) {
     stop();
     mode = 'online';
     gameId = message.gameId;
+    state = null;
     try {
       await ensureGame(gameId);
       canvas = showGame(root, gameId, mode, roomInfo?.playerIndex || 0);
       onlinePlaying = true;
       const sendFrame = () => {
         if (!onlinePlaying || socket?.readyState !== WebSocket.OPEN) return;
-        socket.send(JSON.stringify({ type: 'input', frame: keyboard.frames(1)[0] }));
+        const frame = keyboard.frames(1)[0];
+        if (gameId === 'puzzles') frame.round = state?.round;
+        socket.send(JSON.stringify({ type: 'input', frame }));
         animation = requestAnimationFrame(sendFrame);
       };
       animation = requestAnimationFrame(sendFrame);

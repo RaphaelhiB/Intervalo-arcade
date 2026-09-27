@@ -7,7 +7,7 @@ function obstaclesFor(seed, distance) {
 }
 
 export function createRace(seed, playerCount) {
-  const distance = 7200;
+  const distance = 21000;
   return {
     distance, obstacles: obstaclesFor(seed, distance), elapsed: 0, status: 'playing', winner: null,
     runners: Array.from({ length: playerCount }, (_, id) => ({ id, progress: 0, height: 0, velocity: 0, stumble: 0, hits: 0, finishedAt: null }))

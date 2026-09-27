@@ -13,7 +13,7 @@ function codeFor(rooms) {
   return code;
 }
 
-function cleanFrame(frame = {}) {
+function cleanFrame(frame) {
   return {
     up: frame.up === true, down: frame.down === true,
     left: frame.left === true, right: frame.right === true,
@@ -84,6 +84,10 @@ export class RoomManager {
     const room = this.clients.get(client);
     if (!room) { this.send(client, { type: 'error', message: 'Você não está em uma sala.' }); return; }
     if (!room.started) { this.send(client, { type: 'error', message: 'A partida não está em andamento.' }); return; }
+    if (!frame || typeof frame !== 'object' || Array.isArray(frame)) {
+      this.send(client, { type: 'error', message: 'Entrada inválida.' }); return;
+    }
+    if (room.gameId === 'puzzles' && frame.round !== room.state.round) return;
     const index = room.players.indexOf(client);
     if (index < 0) return;
     const incoming = cleanFrame(frame);

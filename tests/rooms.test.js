@@ -67,10 +67,38 @@ test('primeiro enigma correto recebido marca o único ponto', () => {
   manager.join(guest, room.code);
   manager.start(host);
   room.state.selections.fill(room.state.questions[0].correct);
-  manager.input(guest, { actionPressed: true });
-  manager.input(host, { actionPressed: true });
+  manager.input(guest, { round: room.state.round, actionPressed: true });
+  manager.input(host, { round: room.state.round, actionPressed: true });
   manager.tickAll(0.03);
   assert.deepEqual(room.state.points, [0, 1]);
+});
+
+test('resposta atrasada de um enigma não pontua na pergunta seguinte', () => {
+  const manager = new RoomManager();
+  const host = client(), guest = client();
+  const room = manager.create(host, 'puzzles');
+  manager.join(guest, room.code);
+  manager.start(host);
+  room.state.selections.fill(room.state.questions[0].correct);
+  manager.input(host, { round: 0, actionPressed: true });
+  manager.tickAll(0.03);
+  assert.equal(room.state.round, 1);
+  room.state.selections[1] = room.state.questions[1].correct;
+  manager.input(guest, { round: 0, actionPressed: true });
+  manager.tickAll(0.03);
+  assert.deepEqual(room.state.points, [1, 0]);
+  assert.equal(room.state.round, 1);
+});
+
+test('entrada nula recebe erro sem derrubar a sala', () => {
+  const manager = new RoomManager();
+  const host = client(), guest = client();
+  const room = manager.create(host, 'arena');
+  manager.join(guest, room.code);
+  manager.start(host);
+  manager.input(host, null);
+  assert.match(last(host, 'error').message, /inválida/);
+  assert.equal(room.started, true);
 });
 
 test('desconexão encerra a sala para todos', () => {

@@ -32,16 +32,19 @@ async function serve(request, response) {
   }
 }
 
-export function createHttpServer() {
+export function createHttpServer({ heartbeatIntervalMs = 30000 } = {}) {
   const server = createServer(serve);
   const rooms = new RoomManager();
   const sockets = new WebSocketServer({ noServer: true, maxPayload: 4096 });
   let timer;
+  let heartbeat;
   server.on('upgrade', (request, socket, head) => {
     if (request.url !== '/ws') { socket.destroy(); return; }
     sockets.handleUpgrade(request, socket, head, client => sockets.emit('connection', client));
   });
   sockets.on('connection', client => {
+    client.isAlive = true;
+    client.on('pong', () => { client.isAlive = true; });
     client.on('message', data => {
       let message;
       try { message = JSON.parse(data.toString()); }
@@ -56,9 +59,23 @@ export function createHttpServer() {
       }
     });
     client.on('close', () => rooms.leave(client));
+    client.on('error', () => { rooms.leave(client); client.terminate(); });
   });
-  server.on('listening', () => { timer = setInterval(() => rooms.tickAll(1 / 30), 1000 / 30); });
-  server.on('close', () => { clearInterval(timer); sockets.close(); });
+  server.on('listening', () => {
+    timer = setInterval(() => rooms.tickAll(1 / 30), 1000 / 30);
+    heartbeat = setInterval(() => {
+      for (const client of sockets.clients) {
+        if (!client.isAlive) {
+          rooms.leave(client);
+          client.terminate();
+          continue;
+        }
+        client.isAlive = false;
+        client.ping();
+      }
+    }, heartbeatIntervalMs);
+  });
+  server.on('close', () => { clearInterval(timer); clearInterval(heartbeat); sockets.close(); });
   return server;
 }
 
