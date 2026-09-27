@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { makeFrame } from '../src/shared/input.js';
+import { makeFrame, mergeFrames } from '../src/shared/input.js';
 import { frameForKeys, createKeyboard } from '../src/client/controls.js';
 
 test('segurar ação só produz actionPressed no primeiro quadro', () => {
@@ -43,4 +43,13 @@ test('toque rápido entre quadros ainda produz uma ação', () => {
   press('keyup');
   assert.equal(keyboard.frames(1)[0].actionPressed, true);
   assert.equal(keyboard.frames(1)[0].actionPressed, false);
+});
+
+test('teclado e toque combinam direções e ação sem perda', () => {
+  const keyboard = makeFrame({ up: true }, {});
+  const touch = makeFrame({ right: true, action: true }, {});
+  assert.deepEqual(mergeFrames(keyboard, touch), {
+    up: true, down: false, left: false, right: true,
+    action: true, actionPressed: true
+  });
 });

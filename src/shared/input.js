@@ -10,3 +10,7 @@ export function makeFrame(held = {}, previous = {}) {
 }
 
 export const IDLE_FRAME = Object.freeze(makeFrame());
+
+export function mergeFrames(first, second) {
+  return Object.fromEntries(Object.keys(IDLE_FRAME).map(key => [key, Boolean(first?.[key] || second?.[key])]));
+}
